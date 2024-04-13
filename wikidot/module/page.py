@@ -141,7 +141,7 @@ class PageCollection(list):
                 if value_element is None:
                     value = None
                 else:
-                    value = value_element.text.strip()
+                    value = value_element.select_one("code").text.strip()
 
                 page_params[key] = value
 
