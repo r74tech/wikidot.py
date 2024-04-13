@@ -76,9 +76,8 @@ class PageCollection(list):
     def _parse(site: 'Site', html_body: BeautifulSoup):
         pages = PageCollection()
 
-        for page_element in html_body.select("span.page"):
+        for page_element in html_body.select("div.page"):
             page_params = {}
-
             # レーティング方式を判定
             is_5star_rating = page_element.select_one("span.rating span.page-rate-list-pages-start") is not None
 
@@ -135,6 +134,17 @@ class PageCollection(list):
 
                 page_params[key] = value
 
+            for set_element in page_element.select("div.set"):
+                key = set_element.select_one("span.name").text.strip()
+                value_element = set_element.select_one("div.value")
+
+                if value_element is None:
+                    value = None
+                else:
+                    value = value_element.text.strip()
+
+                page_params[key] = value
+
             # タグのリストを統合
             for key in ["tags", "_tags"]:
                 if page_params[key] is None:
@@ -156,15 +166,26 @@ class PageCollection(list):
         # 初回実行
         query_dict = query.as_dict()
         query_dict["moduleName"] = "list/ListPagesModule"
-        query_dict["module_body"] = '[[span class="page"]]' + "".join(
+        query_dict["module_body"] = '[[div class="page"]]\n' + "".join(
             [
                 f'[[span class="set {key}"]]'
                 f'[[span class="name"]] {key} [[/span]]'
                 f'[[span class="value"]] %%{key}%% [[/span]]'
                 f'[[/span]]'
                 for key in DEFAULT_MODULE_BODY
+            ] + 
+            [
+                f'[[div_ class="set content"]]\n'
+                f'[[span class="name"]] content [[/span]]'
+                f'[[div_ class="value"]]\n'
+                f'[[code]]\n'
+                f'%%content%%'
+                f'[[/code]]\n'
+                f'[[/div]]\n'
+                f'[[/div]]\n'
             ]
-        ) + "[[/span]]"
+
+        ) + "[[/div]]"
 
         try:
             response = site.amc_request([query_dict])[0]
@@ -303,6 +324,7 @@ class Page:
     updated_at: datetime
     commented_by: Optional['User']
     commented_at: datetime
+    content: str
     _id: int = None
 
     def get_url(self) -> str:
