@@ -77,7 +77,6 @@ class PageCollection(list):
         pages = PageCollection()
 
         for page_element in html_body.select("div.page"):
-            print(page_element)
             page_params = {}
             # レーティング方式を判定
             is_5star_rating = page_element.select_one("span.rating span.page-rate-list-pages-start") is not None
@@ -135,15 +134,15 @@ class PageCollection(list):
 
                 page_params[key] = value
 
-            for set_element in page_element.select("div.set"):
-                key = set_element.select_one("span.name").text.strip()
-                value_element = set_element.select_one("div.value")
-                if value_element is None:
-                    value = None
-                else:
-                    value = value_element.select_one("code").text.strip()
+            set_element = page_element.select_one("div.set")
+            key = set_element.select_one("span.name").text.strip()
+            value_element = set_element.select_one("div.value")
+            if value_element is None:
+                value = None
+            else:
+                value = value_element.select_one("code").text.strip()
 
-                page_params[key] = value
+            page_params[key] = value
 
             # タグのリストを統合
             for key in ["tags", "_tags"]:
