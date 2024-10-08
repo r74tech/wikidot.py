@@ -25,6 +25,9 @@ def user_parse(client: "Client", elem: bs4.Tag) -> user.AbstractUser:
         User | DeletedUser | AnonymousUser | GuestUser | WikidotUser のいずれか
     """
 
+    if isinstance(elem, str) and elem.strip() == "(user deleted)":
+        return user.DeletedUser(client=client)
+
     if "class" in elem.attrs and "deleted" in elem["class"]:
         return user.DeletedUser(client=client, id=int(elem["data-id"]))
 
